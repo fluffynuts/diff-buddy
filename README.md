@@ -7,6 +7,15 @@ This is a small utility to help with diffs on really large pull requests. To use
 3. Filter down results iteratively at the command-line with subsequent runs until
     you end up seeing a useful changeset
 
+Building
+---
+You can build with `dotnet`. If you'd like some sugar for building, then
+```
+npm ci
+npm run publish-win32
+```
+or publish-linux / publish-osx - though these targets haven't been tested - but published artifacts are placed in the `bin` folder for convenience.
+
 Options
 ---
 
