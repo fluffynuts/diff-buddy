@@ -15,7 +15,7 @@
     <ItemGroup>
         <PackageReference Include="LibGit2Sharp" Version="0.26.2" />
         <PackageReference Include="Pastel" Version="3.0.0" />
-        <PackageReference Include="PeanutButter.EasyArgs" Version="2.0.64" />
+        <PackageReference Include="PeanutButter.EasyArgs" Version="2.0.66" />
     </ItemGroup>
 
 </Project>
