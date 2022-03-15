@@ -1,0 +1,54 @@
+﻿using PeanutButter.EasyArgs.Attributes;
+
+namespace diff_buddy;
+
+// ReSharper disable once ClassNeverInstantiated.Global
+public class Options
+{
+    [Description("Display a count of matching files only, and exit")]
+    public bool CountOnly { get; set; }
+
+    [Description("Enable file-by-file review mode")]
+    public bool Review { get; set; }
+
+    [Description("Starting branch for the diff")]
+    [Default("master")]
+    public string FromBranch { get; set; }
+
+    [Description("Later branch to diff with")]
+    public string ToBranch { get; set; }
+
+    [Description("Regular expressions for lines to ignore when deciding on interesting files")]
+    public string[] IgnoreLines { get; set; }
+    [Description("Regular expressions for files to ignore completely")]
+    public string[] IgnoreFiles { get; set; }
+
+    [Default(".")]
+    [Description("The path to the local repository to inspect")]
+    public string Repo { get; set; }
+
+    [Description("Whether or not to show patches for files")]
+    public bool ShowPatches { get; set; }
+
+    [Description("Limit the number of files to list")]
+    [Default(int.MaxValue)]
+    public int Limit { get; set; }
+
+    [Description("Start printing from this offset")]
+    [Default(0)]
+    public int Offset { get; set; }
+
+    [Description("Show the diff at the provided index only")]
+    public int At { get; set; }
+
+    [Description("Ignore whitespace changes, even those spanning multiple lines, when deciding on interesting files")]
+    public bool IgnoreWhitespace { get; set; }
+
+    [Description("Show the numeric index for each file")]
+    [Default(true)]
+    public bool ShowIndexes { get; set; }
+    
+    [Description("Show the operation which this file has undergone: (A)dded, (D)eleted, (M)odified, (R)enamed")]
+    [Default(true)]
+    public bool ShowOperations { get; set; }
+}
