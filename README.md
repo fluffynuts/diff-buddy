@@ -13,24 +13,10 @@ This is a small utility to help with diffs on really large pull requests. To use
 
 Quick-start
 ---
-
-Show the help
-```
-npm start -- --help
-```
-Start a review
-```
-npm review -- --repo /path/to/repository
-```
-
-Building
----
-You can build with `dotnet`. If you'd like some sugar for building, then
-```
-npm ci
-npm run publish-win32
-```
-or publish-linux / publish-osx - though these targets haven't been tested - but published artifacts are placed in the `bin` folder for convenience.
+1. `npm ci`
+2. Publish for your platform: `npm run publish-win32`
+3. cd into the `bin` folder, or add it to your path
+4. start using diff-buddy (:
 
 Options
 ---
