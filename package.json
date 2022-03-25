@@ -4,11 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-      "zarro": "cross-env BUILD_CONFIGURATION=Release DOTNET_CORE=1 zarro",
-      "build": "run-s \"zarro build\"",
-      "publish-linux": "dotnet publish src/diff-buddy/diff-buddy.csproj -c Release -r linux-x64 --no-self-contained -o bin",
-      "publish-win32": "dotnet publish src/diff-buddy/diff-buddy.csproj -c Release -r win-x64 --no-self-contained -o bin",
-      "publish-osx": "dotnet publish src/diff-buddy/diff-buddy.csproj -c Release -r osx-x64 --no-self-contained -o bin"
+    "start": "dotnet run --project src/diff-buddy --",
+    "review": "dotnet run --project src/diff-buddy -- --review",
+    "zarro": "cross-env BUILD_CONFIGURATION=Release DOTNET_CORE=1 zarro",
+    "build": "run-s \"zarro build\"",
+    "publish-linux": "dotnet publish src/diff-buddy/diff-buddy.csproj -c Release -r linux-x64 --no-self-contained -o bin",
+    "publish-win32": "dotnet publish src/diff-buddy/diff-buddy.csproj -c Release -r win-x64 --no-self-contained -o bin",
+    "publish-osx": "dotnet publish src/diff-buddy/diff-buddy.csproj -c Release -r osx-x64 --no-self-contained -o bin"
   },
   "keywords": [],
   "author": "",

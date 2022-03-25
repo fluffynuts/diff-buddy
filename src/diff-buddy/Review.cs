@@ -57,13 +57,18 @@ public static class Review
         options.CountOnly = true;
         Console.WriteLine("Please wait... counting relevant changes...");
         using var io = ProcessIO.Start(exe, options.GenerateArgs().AsQuotedArgs());
-        var result = io.StandardOutput.FirstOrDefault();
+        var stdout = io.StandardOutput.ToArray();
+        var result = stdout.FirstOrDefault();
         if (result is not null && int.TryParse(result, out var entries))
         {
             return entries;
         }
+        
 
         Console.WriteLine($"Unable to count changes in {options.Repo}");
+        Console.WriteLine($"stdout: {stdout.JoinWith("\n")}");
+        var stderr = io.StandardError.ToArray();
+        Console.WriteLine($"stderr: {stderr.JoinWith("\n")}");
         return -1;
     }
 
