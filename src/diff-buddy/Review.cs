@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using LibGit2Sharp;
 using PeanutButter.EasyArgs;
 using PeanutButter.Utils;
 using Terminal.Gui;
@@ -14,6 +13,42 @@ namespace diff_buddy;
 
 public static class Review
 {
+    public static int RunWith(Options options)
+    {
+        options.Review = false;
+        var originalOffset = options.Offset;
+        var originalLimit = options.Limit;
+        options.Offset = 0;
+        options.Limit = int.MaxValue;
+        if (options.Repo == ".")
+        {
+            options.Repo = Environment.CurrentDirectory;
+        }
+
+        options.SetCurrentBranchAsToBranchIfNotSet();
+
+        var reviewState = new ReviewState(options);
+
+        var entries = CountChanges(options);
+        if (entries < 0)
+        {
+            return entries;
+        }
+
+        var exe = FindExeForCurrentProcess();
+
+        var start = originalOffset + 1;
+        var limit = originalLimit == int.MaxValue
+            ? originalLimit
+            : originalLimit + start;
+        var end = Math.Min(entries, limit);
+
+        RunReviewsPerFile(options, start, end, exe, reviewState);
+
+        HandleReviewCompleted(reviewState);
+        return 0;
+    }
+
     private static int CountChanges(Options opts)
     {
         var options = opts.DeepClone();
@@ -52,40 +87,19 @@ public static class Review
         return _exe = exe.Trim('"');
     }
 
-    public static int RunWith(Options options)
+    private static void RunReviewsPerFile(
+        Options options,
+        int start,
+        int end,
+        string exe,
+        ReviewState reviewState
+    )
     {
-        options.Review = false;
-        var originalOffset = options.Offset;
-        var originalLimit = options.Limit;
-        options.Offset = 0;
-        options.Limit = int.MaxValue;
-        if (options.Repo == ".")
-        {
-            options.Repo = Environment.CurrentDirectory;
-        }
-
-        options.SetCurrentBranchAsToBranchIfNotSet();
-
-        var reviewState = new ReviewState(options);
-
-        var entries = CountChanges(options);
-        if (entries < 0)
-        {
-            return entries;
-        }
-
-        var exe = FindExeForCurrentProcess();
-
-        var start = originalOffset + 1;
-        var limit = originalLimit == int.MaxValue
-            ? originalLimit
-            : originalLimit + start;
-        var end = Math.Min(entries, limit);
         var seekToLastFile = reviewState.CanResume && reviewState.LastFile is not null;
         var foundLastFile = false;
         if (LookingForLastFile())
         {
-            Console.WriteLine($"Seeking to last position: {reviewState.LastFile}");
+            Console.Write($"Seeking to last position: {reviewState.LastFile} ");
         }
 
         for (var i = start; i < end; i++)
@@ -103,6 +117,7 @@ public static class Review
                 foundLastFile = fileName == reviewState.LastFile;
                 if (!foundLastFile)
                 {
+                    Console.Write(".");
                     continue;
                 }
             }
@@ -125,32 +140,30 @@ public static class Review
             }
         }
 
-        HandleReviewCompleted();
-        return 0;
-
         bool LookingForLastFile()
         {
             return seekToLastFile && !foundLastFile;
         }
+    }
 
-        void HandleReviewCompleted()
+    private static void HandleReviewCompleted(ReviewState reviewState)
+    {
+        Console.Clear();
+        if (!Ask("Are you done with this review?"))
         {
-            Console.Clear();
-            if (!Ask("Are you done with this review?"))
-            {
-                Console.WriteLine($@"
+            Console.WriteLine($@"
 Review state persisted to {reviewState.StateFile.BrightGreen()}
 
 {"You will pick up from where you left off from next time you start a review".Rainbow()}
 ");
-                return;
-            }
+            return;
+        }
 
-            var comment = reviewState.GenerateCommentary();
-            // store this review temporarily until the user says she's done
-            File.WriteAllText(reviewState.ReviewCommentsFile, comment);
-            ClipboardService.SetText(comment);
-            Console.WriteLine($@"
+        var comment = reviewState.GenerateCommentary();
+        // store this review temporarily until the user says she's done
+        File.WriteAllText(reviewState.ReviewCommentsFile, comment);
+        ClipboardService.SetText(comment);
+        Console.WriteLine($@"
 
 {"Commentary copied to clipboard and also stored at".BrightCyan()}
   {reviewState.ReviewCommentsFile.BrightGreen()}
@@ -158,9 +171,9 @@ Review state persisted to {reviewState.StateFile.BrightGreen()}
 and afterwards come back here to confirm removal of review state files.".BrightBlue()}
 
 ");
-            if (!Ask($"Delete all stored review state?"))
-            {
-                Console.WriteLine($@"
+        if (!Ask($"Delete all stored review state?"))
+        {
+            Console.WriteLine($@"
 
 {"The following files are left on disk:".White()}
 - {reviewState.ReviewCommentsFile.BrightRed()}
@@ -169,11 +182,10 @@ and afterwards come back here to confirm removal of review state files.".BrightB
 {"You should clean them up manually if required.".BrightPink()}
 
 ");
-                return;
-            }
-
-            reviewState.ClearAll();
+            return;
         }
+
+        reviewState.ClearAll();
     }
 
     private static bool Ask(string question)
@@ -199,23 +211,26 @@ and afterwards come back here to confirm removal of review state files.".BrightB
 
     private static readonly Regex FileNameMatcher = new Regex("(\\S+)\\s+(\\S+)\\s+(\\S+)");
 
-    private static ReviewResults LaunchReviewUiWith(
-        ReviewStateItem reviewStateItem,
-        string[] lines
+    private static Window CreateWindow()
+    {
+        return new Window("Changes: ")
+        {
+            Height = Dim.Fill(1),
+            ColorScheme = new ColorScheme()
+            {
+                Normal = Attribute.Make(Color.White, Color.Black),
+                Disabled = Attribute.Make(Color.Gray, Color.Black),
+                Focus = Attribute.Make(Color.White, Color.Black),
+                HotFocus = Attribute.Make(Color.BrightYellow, Color.Black),
+                HotNormal = Attribute.Make(Color.White, Color.Black)
+            }
+        };
+    }
+
+    private static (FrameView leftFrame, FrameView rightFrame) CreateFrames(
+        Window win
     )
     {
-        Application.Init();
-        Application.QuitKey = Key.CtrlMask | Key.AltMask | Key.ShiftMask | Key.Q;
-        var top = Application.Top;
-        var win = new Window("Changes: ");
-        win.ColorScheme = new ColorScheme()
-        {
-            Normal = Attribute.Make(Color.White, Color.Black),
-            Disabled = Attribute.Make(Color.Gray, Color.Black),
-            Focus = Attribute.Make(Color.White, Color.Black),
-            HotFocus = Attribute.Make(Color.BrightYellow, Color.Black),
-            HotNormal = Attribute.Make(Color.White, Color.Black)
-        };
         var leftFrame = new FrameView()
         {
             Width = Dim.Percent(65, true),
@@ -228,16 +243,35 @@ and afterwards come back here to confirm removal of review state files.".BrightB
             Height = Dim.Fill()
         };
         win.Add(leftFrame, rightFrame);
+        return (leftFrame, rightFrame);
+    }
 
-        var diffView = new DiffTextView()
+    private static void AddDiffView(
+        View parent,
+        string[] lines)
+    {
+        parent.Add(new DiffTextView()
         {
             Width = Dim.Fill(),
             Height = Dim.Fill(),
             Text = string.Join("\n", lines),
             ReadOnly = true
-        };
+        });
+    }
 
-        leftFrame.Add(diffView);
+    private static ReviewResults LaunchReviewUiWith(
+        ReviewStateItem reviewStateItem,
+        string[] lines
+    )
+    {
+        Application.Init();
+        Application.QuitKey = Key.CtrlMask | Key.AltMask | Key.ShiftMask | Key.Q;
+        var top = Application.Top;
+        var win = CreateWindow();
+
+        var (leftFrame, rightFrame) = CreateFrames(win);
+        
+        AddDiffView(leftFrame, lines);
 
         var commentArea = new TextView()
         {
@@ -245,68 +279,71 @@ and afterwards come back here to confirm removal of review state files.".BrightB
             Height = Dim.Fill(),
             Text = reviewStateItem.Comments,
             WordWrap = true,
-            CursorPosition = PositionFor(reviewStateItem.Comments)
+            AllowsTab = true,
+            Multiline = true,
+            TabWidth = 2
         };
         rightFrame.Add(commentArea);
 
         top.Add(win);
+
+        CreateStatusBar(top, MovePrevious, MoveNext, Quit);
         var result = ReviewResults.GoNext;
-        win.KeyPress += args =>
-        {
-            var handled = args.Is(Key.AltMask, Key.CursorRight);
 
-            if (args.Is(Key.AltMask, Key.CursorLeft))
-            {
-                handled = true;
-                result = ReviewResults.GoBack;
-            }
-
-
-            if (args.Is(Key.CtrlMask, Key.Q) ||
-                args.Is(Key.AltMask, Key.Q))
-            {
-                result = ReviewResults.Exit;
-                handled = true;
-            }
-
-            if (handled)
-            {
-                args.Handled = true;
-                reviewStateItem.Comments = commentArea.Text.ToString();
-                reviewStateItem.Persist();
-                Application.RequestStop();
-            }
-        };
-        
         commentArea.SetFocus();
-        Application.Run(win);
+        Application.Run(top);
         Application.Shutdown();
 
         return result;
+
+        void MoveNext()
+        {
+            result = ReviewResults.GoNext;
+            RequestStop();
+        }
+
+        void MovePrevious()
+        {
+            result = ReviewResults.GoBack;
+            RequestStop();
+        }
+
+        void Quit()
+        {
+            result = ReviewResults.Exit;
+            RequestStop();
+        }
+
+        void RequestStop()
+        {
+            reviewStateItem.Comments = commentArea.Text.ToString();
+            reviewStateItem.Persist();
+            Application.RequestStop();
+        }
     }
 
-    private static Point PositionFor(string comments)
+    private static void CreateStatusBar(
+        View top,
+        Action movePrevious,
+        Action moveNext,
+        Action quit
+    )
+    {
+        var statusBar = new StatusBar(
+            new[]
+            {
+                new StatusItem(Key.AltMask | Key.CursorLeft, "Alt-Left Previous", movePrevious),
+                new StatusItem(Key.AltMask | Key.CursorRight, "Alt-Right Next", moveNext),
+                new StatusItem(Key.AltMask | Key.Q, "Alt-Q Quit", quit)
+            });
+        top.Add(statusBar);
+    }
+
+    private static Point PositionAtEndOf(string comments)
     {
         var lines = comments.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
         var lastLine = lines.Length - 1;
         var lastChar = lines[lastLine].Length - 1;
         return new Point(lastLine, lastChar + 1);
-    }
-}
-
-public enum ReviewResults
-{
-    None,
-    GoBack,
-    GoNext,
-    Exit,
-}
-
-public static class KeyEventArgsExtensions
-{
-    public static bool Is(this View.KeyEventEventArgs eventArgs, params Key[] keys)
-    {
-        var eventKey = eventArgs.KeyEvent.Key;
-        return keys.Aggregate(true, (acc, cur) => acc && (eventKey & cur) == cur);
     }
 }

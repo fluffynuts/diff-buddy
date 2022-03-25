@@ -51,18 +51,6 @@ public class ReviewStateItem : ReviewStateItemData
     }
 }
 
-public class PersistedReviewState
-{
-    public string FromBranch { get; set; }
-    public string ToBranch { get; set; }
-    public ReviewStateItemData[] Items { get; set; }
-    public string LastFile { get; set; }
-    public int Offset { get; set; }
-    public int Limit { get; set; }
-    public string[] IgnoreFiles { get; set; }
-    public string Repo { get; set; }
-}
-
 public class ReviewState
 {
     public string LastFile { get; private set; }
@@ -85,13 +73,13 @@ public class ReviewState
             .Where(s => !string.IsNullOrEmpty(s))
             .ToArray();
         var folderName = repoPathParts.Last();
-        var filename = $@"diff-buddy-state-[{
+        var filename = $@"diff-buddy-state-({
             folderName
-        }]-[{
+        })-({
             options.FromBranch
-        }]-[{
+        })-({
             options.ToBranch
-        }].json";
+        }).json";
         StateFile = Path.Combine(home, filename);
         if (!File.Exists(StateFile))
         {
@@ -241,24 +229,5 @@ Found in {StateFile}:
     private void ClearCommentsFile()
     {
         DeleteFileIfExists(ReviewCommentsFile);
-    }
-}
-
-public static class ListExtensions
-{
-    public static T FindOrAdd<T>(
-        this IList<T> list,
-        Func<T, bool> matcher,
-        Func<T> factory
-    )
-    {
-        var result = list.FirstOrDefault(matcher);
-        if (result is null)
-        {
-            result = factory();
-            list.Add(result);
-        }
-
-        return result;
     }
 }
