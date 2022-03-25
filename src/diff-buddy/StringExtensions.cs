@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Pastel;
+using PeanutButter.Utils;
 
 namespace diff_buddy;
 
@@ -18,54 +19,56 @@ public static class StringExtensions
     private static readonly Color _brightPink = Color.FromArgb(255, 255, 128, 160);
     private static readonly Color _grey = Color.FromArgb(255, 128, 128, 128);
     private static readonly Color _darkGrey = Color.FromArgb(255, 80, 80, 80);
+    private static readonly Color _white = Color.FromArgb(255, 255, 255, 255);
 
-    public static string BrightRed(this string str)
+    public static string Colorise(
+        this string str,
+        Color color
+    )
     {
         return DisableColor
             ? str
-            : str.Pastel(_brightRed);
+            : str.Pastel(color);
+    }
+
+    public static string White(this string str)
+    {
+        return str.Colorise(_white);
+    }
+
+    public static string BrightRed(this string str)
+    {
+        return str.Colorise(_brightRed);
     }
 
     public static string BrightGreen(this string str)
     {
-        return DisableColor
-            ? str
-            : str.Pastel(_brightGreen);
+        return str.Colorise(_brightGreen);
     }
 
     public static string BrightCyan(this string str)
     {
-        return DisableColor
-            ? str
-            : str.Pastel(_brightCyan);
+        return str.Colorise(_brightCyan);
     }
 
     public static string BrightYellow(this string str)
     {
-        return DisableColor
-            ? str
-            : str.Pastel(_brightYellow);
+        return str.Colorise(_brightYellow);
     }
 
     public static string BrightMagenta(this string str)
     {
-        return DisableColor
-            ? str
-            : str.Pastel(_brightMagenta);
+        return str.Colorise(_brightMagenta);
     }
 
     public static string BrightPink(this string str)
     {
-        return DisableColor
-            ? str
-            : str.Pastel(_brightPink);
+        return str.Colorise(_brightPink);
     }
 
     public static string BrightBlue(this string str)
     {
-        return DisableColor
-            ? str
-            : str.Pastel(_brightBlue);
+        return str.Colorise(_brightBlue);
     }
 
     private static int _rainbow;
@@ -83,24 +86,32 @@ public static class StringExtensions
 
     private static readonly int RainbowOptions = RainbowLookup.Keys.Count;
 
-    public static string Rainbow(this string str)
+    public static string Random(this string str)
     {
         var handler = RainbowLookup[_rainbow++ % RainbowOptions];
         return handler(str);
     }
 
+    public static string Rainbow(this string str)
+    {
+        return str.Aggregate(
+            new List<string>(),
+            (acc, cur) =>
+            {
+                var handler = RainbowLookup[_rainbow++ % RainbowOptions];
+                acc.Add(handler(cur.ToString()));
+                return acc;
+            }).JoinWith("");
+    }
+
     public static string Grey(this string str)
     {
-        return DisableColor
-            ? str
-            : str.Pastel(_grey);
+        return str.Colorise(_grey);
     }
 
     public static string DarkGrey(this string str)
     {
-        return DisableColor
-            ? str
-            : str.Pastel(_darkGrey);
+        return str.Colorise(_darkGrey);
     }
 
     public static string ToHex(this byte[] bytes)

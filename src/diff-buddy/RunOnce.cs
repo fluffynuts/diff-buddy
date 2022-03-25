@@ -7,6 +7,22 @@ using static diff_buddy.Functions;
 
 namespace diff_buddy;
 
+public static class OptionsExtensions
+{
+    public static void SetCurrentBranchAsToBranchIfNotSet(
+        this Options options
+    )
+    {
+        if (!string.IsNullOrWhiteSpace(options.ToBranch))
+        {
+            return;
+        }
+
+        using var repo = new Repository(options.Repo);
+        options.ToBranch = repo.Head.FriendlyName;
+    }
+}
+
 public static class RunOnce
 {
     public static int With(Options options, bool showFilePathAtEnd)
@@ -17,12 +33,10 @@ public static class RunOnce
             options.Limit = 1;
             options.ShowPatches = true;
         }
+        
+        options.SetCurrentBranchAsToBranchIfNotSet();
 
         using var repo = new Repository(options.Repo);
-        if (string.IsNullOrWhiteSpace(options.ToBranch))
-        {
-            options.ToBranch = repo.Head.FriendlyName;
-        }
 
         var leftTree = repo.Branches.FirstOrDefault(b => b.FriendlyName == options.FromBranch)?.Tip.Tree;
         var rightTree = repo.Branches.FirstOrDefault(b => b.FriendlyName == options.ToBranch)?.Tip.Tree;
