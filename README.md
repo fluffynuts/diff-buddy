@@ -6,6 +6,22 @@ This is a small utility to help with diffs on really large pull requests. To use
 2. Run diff-buddy - if you run from within the repo, it will default to diff against master
 3. Filter down results iteratively at the command-line with subsequent runs until
     you end up seeing a useful changeset
+4. Run in review mode with your prior commandline and `--review` to comment on files. 
+    When a review is complete, your comments can be copied to the clipboard to add to the pull request you're 
+    reviewing. Reviews can be resumed - just quit and say you're not done with the review. Next time,
+    diff-buddy will attempt to pick up where you left off.
+
+Quick-start
+---
+
+Show the help
+```
+npm start -- --help
+```
+Start a review
+```
+npm review -- --repo /path/to/repository
+```
 
 Building
 ---
