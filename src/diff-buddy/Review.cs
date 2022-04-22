@@ -69,6 +69,7 @@ public static class Review
         Console.WriteLine($"stdout: {stdout.JoinWith("\n")}");
         var stderr = io.StandardError.ToArray();
         Console.WriteLine($"stderr: {stderr.JoinWith("\n")}");
+        Console.WriteLine($"command was: {exe} {options.GenerateArgs().AsQuotedArgs()}");
         return -1;
     }
 
