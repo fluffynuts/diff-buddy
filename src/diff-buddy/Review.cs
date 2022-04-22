@@ -357,10 +357,10 @@ and afterwards come back here to confirm removal of review state files.".BrightB
         var statusBar = new StatusBar(
             new[]
             {
-                new StatusItem(Key.CtrlMask | Key.ShiftMask | Key.P, "Ctrl-Shift-P Prev", movePrevious),
-                new StatusItem(Key.CtrlMask | Key.ShiftMask | Key.N, "Ctrl-Shift-N Next", moveNext),
-                new StatusItem(Key.CtrlMask | Key.ShiftMask | Key.C, "Ctrl-Shift-C Comment", focusComments),
-                new StatusItem(Key.CtrlMask | Key.ShiftMask | Key.Q, "Ctrl-Shift-Q Quit", quit)
+                new StatusItem(Key.F1, "F1 Prev", movePrevious),
+                new StatusItem(Key.F2, "F2 Next", moveNext),
+                new StatusItem(Key.F3, "F3 Comment", focusComments),
+                new StatusItem(Key.F4, "F4 Quit", quit)
             });
         top.Add(statusBar);
     }
