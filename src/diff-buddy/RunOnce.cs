@@ -33,8 +33,16 @@ public static class RunOnce
             options.Limit = 1;
             options.ShowPatches = true;
         }
-        
-        options.SetCurrentBranchAsToBranchIfNotSet();
+
+        try
+        {
+            options.SetCurrentBranchAsToBranchIfNotSet();
+        }
+        catch (RepositoryNotFoundException)
+        {
+            Console.Error.WriteLine($"{options.Repo} is not the base of a git repository (try --help for help)");
+            return 2;
+        }
 
         using var repo = new Repository(options.Repo);
 
