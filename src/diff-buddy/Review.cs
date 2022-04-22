@@ -360,7 +360,7 @@ and afterwards come back here to confirm removal of review state files.".BrightB
                 new StatusItem(Key.F1, "F1 Prev", movePrevious),
                 new StatusItem(Key.F2, "F2 Next", moveNext),
                 new StatusItem(Key.F3, "F3 Comment", focusComments),
-                new StatusItem(Key.F4, "F4 Quit", quit)
+                new StatusItem(Key.F12, "F12 Quits", quit)
             });
         top.Add(statusBar);
     }
