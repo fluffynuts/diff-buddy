@@ -69,7 +69,7 @@ public static class Review
         Console.WriteLine($"stdout: {stdout.JoinWith("\n")}");
         var stderr = io.StandardError.ToArray();
         Console.WriteLine($"stderr: {stderr.JoinWith("\n")}");
-        Console.WriteLine($"command was: {exe} {options.GenerateArgs().AsQuotedArgs()}");
+        Console.WriteLine($"command was: {exe} {options.GenerateArgs().AsQuotedArgs().JoinWith(" ")}");
         return -1;
     }
 
@@ -83,6 +83,7 @@ public static class Review
         }
 
         var cmd = Environment.CommandLine;
+        Console.WriteLine($"Determine executable from commandline: {cmd}");
         var splitCmd = new Queue<string>(cmd.Split(' '));
         var exe = splitCmd.Dequeue().Replace(".dll", ".exe");
         while (splitCmd.Count > 0 && exe.Count(c => c == '"') % 2 != 0)
