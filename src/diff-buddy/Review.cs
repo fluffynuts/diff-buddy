@@ -105,7 +105,7 @@ public static class Review
                 throw new Exception($"Can't find myself at: {trimmed}");
             }
             // OSX says you're running a .exe, but you aren't
-            trimmed = trimmed.RegexReplace("\\\\.exe$", "");
+            trimmed = trimmed.RegexReplace("\\.exe$", "");
             if (!File.Exists(trimmed))
             {
                 throw new Exception($"Can't find myself at: {trimmed}");
