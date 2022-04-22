@@ -79,7 +79,7 @@ public class ReviewState
             options.FromBranch
         })-({
             options.ToBranch
-        }).json";
+        }).json".RegexReplaceAll("_", "\\\\", "/", ":");
         StateFile = Path.Combine(home, filename);
         if (!File.Exists(StateFile))
         {
