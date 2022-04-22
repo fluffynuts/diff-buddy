@@ -238,11 +238,13 @@ and afterwards come back here to confirm removal of review state files.".BrightB
     {
         var leftFrame = new FrameView()
         {
+            Title = "File",
             Width = Dim.Percent(65, true),
             Height = Dim.Fill()
         };
         var rightFrame = new FrameView()
         {
+            Title = "Comments",
             X = Pos.Right(leftFrame),
             Width = Dim.Fill(),
             Height = Dim.Fill()
@@ -292,7 +294,7 @@ and afterwards come back here to confirm removal of review state files.".BrightB
 
         top.Add(win);
 
-        CreateStatusBar(top, MovePrevious, MoveNext, Quit);
+        CreateStatusBar(top, MovePrevious, MoveNext, () => commentArea.SetFocus(), Quit);
         var result = ReviewResults.GoNext;
 
         commentArea.SetFocus();
@@ -331,15 +333,17 @@ and afterwards come back here to confirm removal of review state files.".BrightB
         View top,
         Action movePrevious,
         Action moveNext,
+        Action focusComments,
         Action quit
     )
     {
         var statusBar = new StatusBar(
             new[]
             {
-                new StatusItem(Key.CtrlMask | Key.P, "Ctrl-P Previous", movePrevious),
-                new StatusItem(Key.CtrlMask | Key.N, "Ctrl-N Next", moveNext),
-                new StatusItem(Key.CtrlMask | Key.Q, "Ctrl-Q Quit", quit)
+                new StatusItem(Key.CtrlMask | Key.ShiftMask | Key.P, "Ctrl-Shift-P Prev", movePrevious),
+                new StatusItem(Key.CtrlMask | Key.ShiftMask | Key.N, "Ctrl-Shift-N Next", moveNext),
+                new StatusItem(Key.CtrlMask | Key.ShiftMask | Key.C, "Ctrl-Shift-C Comment", focusComments),
+                new StatusItem(Key.CtrlMask | Key.ShiftMask | Key.Q, "Ctrl-Shift-Q Quit", quit)
             });
         top.Add(statusBar);
     }
