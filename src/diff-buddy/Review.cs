@@ -94,8 +94,14 @@ public static class Review
         var trimmed = exe.Trim('"');
         if (!File.Exists(trimmed))
         {
+            if (Platform.IsUnixy)
+            {
+                Console.WriteLine("Not running on windows");
+            }
+
             if (Platform.IsWindows)
             {
+                Console.WriteLine("Running on Windows");
                 throw new Exception($"Can't find myself at: {trimmed}");
             }
             // OSX says you're running a .exe, but you aren't
