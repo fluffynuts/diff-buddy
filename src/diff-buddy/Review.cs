@@ -337,18 +337,10 @@ and afterwards come back here to confirm removal of review state files.".BrightB
         var statusBar = new StatusBar(
             new[]
             {
-                new StatusItem(Key.AltMask | Key.CursorLeft, "Alt-Left Previous", movePrevious),
-                new StatusItem(Key.AltMask | Key.CursorRight, "Alt-Right Next", moveNext),
+                new StatusItem(Key.AltMask | Key.P, "Alt-P Previous", movePrevious),
+                new StatusItem(Key.AltMask | Key.N, "Alt-N Next", moveNext),
                 new StatusItem(Key.AltMask | Key.Q, "Alt-Q Quit", quit)
             });
         top.Add(statusBar);
-    }
-
-    private static Point PositionAtEndOf(string comments)
-    {
-        var lines = comments.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
-        var lastLine = lines.Length - 1;
-        var lastChar = lines[lastLine].Length - 1;
-        return new Point(lastLine, lastChar + 1);
     }
 }
