@@ -91,7 +91,21 @@ public static class Review
             exe = $"{exe} {splitCmd.Dequeue()}";
         }
 
-        return _exe = exe.Trim('"');
+        var trimmed = exe.Trim('"');
+        if (!File.Exists(trimmed))
+        {
+            if (Platform.IsWindows)
+            {
+                throw new Exception($"Can't find myself at: {trimmed}");
+            }
+            // OSX says you're running a .exe, but you aren't
+            trimmed = trimmed.RegexReplace("\\\\.exe$", "");
+            if (!File.Exists(trimmed))
+            {
+                throw new Exception($"Can't find myself at: {trimmed}");
+            }
+        }
+        return trimmed;
     }
 
     private static void RunReviewsPerFile(
