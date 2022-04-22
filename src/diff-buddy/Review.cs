@@ -337,9 +337,9 @@ and afterwards come back here to confirm removal of review state files.".BrightB
         var statusBar = new StatusBar(
             new[]
             {
-                new StatusItem(Key.AltMask | Key.P, "Alt-P Previous", movePrevious),
-                new StatusItem(Key.AltMask | Key.N, "Alt-N Next", moveNext),
-                new StatusItem(Key.AltMask | Key.Q, "Alt-Q Quit", quit)
+                new StatusItem(Key.CtrlMask | Key.P, "Ctrl-P Previous", movePrevious),
+                new StatusItem(Key.CtrlMask | Key.N, "Ctrl-N Next", moveNext),
+                new StatusItem(Key.CtrlMask | Key.Q, "Ctrl-Q Quit", quit)
             });
         top.Add(statusBar);
     }
