@@ -27,6 +27,11 @@ public static class RunOnce
 {
     public static int With(Options options, bool showFilePathAtEnd)
     {
+        if (!options.TryResolveRepository())
+        {
+            return Bail(2, $"{options.Repo} is not within a git repository (try --help for help)");
+        }
+
         if (options.At != 0)
         {
             options.Offset = options.At - 1;
@@ -40,9 +45,16 @@ public static class RunOnce
         }
         catch (RepositoryNotFoundException)
         {
-            Console.Error.WriteLine($"{options.Repo} is not the base of a git repository (try --help for help)");
-            return 2;
+            // should never get here because of check above, but, just in case
+            return Bail(2, $"{options.Repo} is not the base of a git repository (try --help for help)");
         }
+
+        if (options.FromBranch == options.ToBranch)
+        {
+            return Bail(3,
+                $"Nothing to compare: same branches selected for from ('{options.FromBranch}') and to ('{options.ToBranch}')");
+        }
+
 
         using var repo = new Repository(options.Repo);
 
@@ -116,5 +128,12 @@ public static class RunOnce
         }
 
         return 0;
+    }
+
+    private static int Bail(int result, string message)
+    {
+        Console.Error.WriteLine(message);
+        Console.Error.WriteLine(" (try --help for help)");
+        return result;
     }
 }

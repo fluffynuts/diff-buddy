@@ -1,4 +1,6 @@
-﻿using PeanutButter.EasyArgs.Attributes;
+﻿using System;
+using System.IO;
+using PeanutButter.EasyArgs.Attributes;
 
 namespace diff_buddy;
 
@@ -20,6 +22,7 @@ public class Options
 
     [Description("Regular expressions for lines to ignore when deciding on interesting files")]
     public string[] IgnoreLines { get; set; }
+
     [Description("Regular expressions for files to ignore completely")]
     public string[] IgnoreFiles { get; set; }
 
@@ -47,8 +50,28 @@ public class Options
     [Description("Show the numeric index for each file")]
     [Default(true)]
     public bool ShowIndexes { get; set; }
-    
+
     [Description("Show the operation which this file has undergone: (A)dded, (D)eleted, (M)odified, (R)enamed")]
     [Default(true)]
     public bool ShowOperations { get; set; }
+
+    public bool TryResolveRepository()
+    {
+        var fullPath = Path.GetFullPath(Repo);
+        bool searching;
+        do
+        {
+            var test = Path.Combine(fullPath, ".git");
+            if (Directory.Exists(test))
+            {
+                Repo = fullPath;
+                return true;
+            }
+
+            fullPath = Path.GetDirectoryName(fullPath);
+            searching = fullPath is not null;
+        } while (searching);
+
+        return false;
+    }
 }
