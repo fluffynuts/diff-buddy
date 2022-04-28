@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using LibGit2Sharp;
 using PeanutButter.Utils;
 
@@ -54,7 +53,7 @@ public class ReviewStateItem : ReviewStateItemData
 public class ReviewState
 {
     public string LastFile { get; private set; }
-    public bool CanResume { get; }
+    public bool CanContinue { get; }
     public string StateFile { get; }
 
     private readonly Options _options;
@@ -76,9 +75,9 @@ public class ReviewState
         var filename = $@"diff-buddy-state-({
             folderName
         })-({
-            options.FromBranch
+            options.From
         })-({
-            options.ToBranch
+            options.To
         }).json".RegexReplaceAll("_", "\\\\", "/", ":");
         StateFile = Path.Combine(home, filename);
         if (!File.Exists(StateFile))
@@ -102,11 +101,11 @@ public class ReviewState
         );
 
         LastFile = state.LastFile;
-        CanResume =
+        CanContinue =
             _reviewStateItems.Any() &&
             state.Limit == _options.Limit &&
             state.Offset == _options.Offset &&
-            state.IgnoreFiles == _options.IgnoreFiles;
+            state.IgnoreFiles.IsEquivalentTo(_options.IgnoreFiles);
         
         // we'll make a new one anyway - don't leave bad state lying about
         ClearCommentsFile();
@@ -118,16 +117,16 @@ public class ReviewState
     )
     {
         if (state.Repo != options.Repo ||
-            state.FromBranch != options.FromBranch ||
-            state.ToBranch != options.ToBranch ||
+            state.FromBranch != options.From ||
+            state.ToBranch != options.To ||
             state.Repo != options.Repo)
         {
             throw new InvalidOperationException(
                 $@"State at {StateFile} does not appear to be for the current conditions:
 Wanted:
     Repo:           {options.Repo}
-    From branch:    {options.FromBranch}
-    To branch:      {options.ToBranch}
+    From branch:    {options.From}
+    To branch:      {options.To}
 Found in {StateFile}:
     Repo:           {state.Repo}
     From branch:    {state.FromBranch}
@@ -141,8 +140,8 @@ Found in {StateFile}:
     {
         var state = new PersistedReviewState()
         {
-            FromBranch = _options.FromBranch,
-            ToBranch = _options.ToBranch,
+            FromBranch = _options.From,
+            ToBranch = _options.To,
             LastFile = LastFile,
             Items = _reviewStateItems.Cast<ReviewStateItemData>().ToArray(),
             IgnoreFiles = _options.IgnoreFiles,

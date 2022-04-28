@@ -106,7 +106,7 @@ public static class Review
                 throw new Exception($"Can't find myself at: {trimmed}");
             }
         }
-        return trimmed;
+        return _exe = trimmed;
     }
 
     private static void RunReviewsPerFile(
@@ -117,7 +117,9 @@ public static class Review
         ReviewState reviewState
     )
     {
-        var seekToLastFile = reviewState.CanResume && reviewState.LastFile is not null;
+        var seekToLastFile = options.Continue &&
+            reviewState.CanContinue && 
+            reviewState.LastFile is not null;
         var foundLastFile = false;
         if (LookingForLastFile())
         {

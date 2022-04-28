@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using PeanutButter.EasyArgs.Attributes;
 
 namespace diff_buddy;
@@ -13,12 +12,16 @@ public class Options
     [Description("Enable file-by-file review mode")]
     public bool Review { get; set; }
 
-    [Description("Starting branch for the diff")]
-    [Default("master")]
-    public string FromBranch { get; set; }
+    [Description("When reviewing, pick up from the last viewed file")]
+    [Default(true)]
+    public bool Continue { get; set; }
 
-    [Description("Later branch to diff with")]
-    public string ToBranch { get; set; }
+    [Description("Starting branch, tag or commit sha for the diff")]
+    [Default("master")]
+    public string From { get; set; }
+
+    [Description("Later branch, tag or commit to diff with")]
+    public string To { get; set; }
 
     [Description("Regular expressions for lines to ignore when deciding on interesting files")]
     public string[] IgnoreLines { get; set; }

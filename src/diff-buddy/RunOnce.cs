@@ -13,13 +13,52 @@ public static class OptionsExtensions
         this Options options
     )
     {
-        if (!string.IsNullOrWhiteSpace(options.ToBranch))
+        if (!string.IsNullOrWhiteSpace(options.To))
         {
             return;
         }
 
         using var repo = new Repository(options.Repo);
-        options.ToBranch = repo.Head.FriendlyName;
+        options.To = repo.Head.FriendlyName;
+    }
+}
+
+public static class RepositoryExtensions
+{
+    private static readonly Func<Repository, string, Tree>[] Strategies =
+    {
+        FindMatchingBranch,
+        FindMatchingTag,
+        FindMatchingSha
+    };
+
+    private static Tree FindMatchingSha(Repository repo, string sha)
+    {
+        return repo.Commits.FirstOrDefault(c => c.Sha == sha)?.Tree;
+    }
+
+    private static Tree FindMatchingTag(Repository repo, string search)
+    {
+        var sha = repo.Tags.FirstOrDefault(b => b.FriendlyName == search)?.Target?.Sha;
+        return sha == null
+            ? null
+            : FindMatchingSha(repo, sha);
+    }
+
+    private static Tree FindMatchingBranch(Repository repo, string search)
+    {
+        return repo.Branches.FirstOrDefault(b => b.FriendlyName == search)?.Tip.Tree;
+    }
+
+    public static Tree FindTreeFor(
+        this Repository repo,
+        string identifier
+    )
+    {
+        return Strategies.Aggregate(
+            null as Tree,
+            (acc, cur) => acc ?? cur(repo, identifier)
+        );
     }
 }
 
@@ -49,17 +88,15 @@ public static class RunOnce
             return Bail(2, $"{options.Repo} is not the base of a git repository (try --help for help)");
         }
 
-        if (options.FromBranch == options.ToBranch)
+        if (options.From == options.To)
         {
             return Bail(3,
-                $"Nothing to compare: same branches selected for from ('{options.FromBranch}') and to ('{options.ToBranch}')");
+                $"Nothing to compare: same branches selected for from ('{options.From}') and to ('{options.To}')");
         }
 
-
         using var repo = new Repository(options.Repo);
-
-        var leftTree = repo.Branches.FirstOrDefault(b => b.FriendlyName == options.FromBranch)?.Tip.Tree;
-        var rightTree = repo.Branches.FirstOrDefault(b => b.FriendlyName == options.ToBranch)?.Tip.Tree;
+        var leftTree = repo.FindTreeFor(options.From) ?? throw new CommitIdentifierNotFound(options.Repo, options.From);
+        var rightTree = repo.FindTreeFor(options.To) ?? throw new CommitIdentifierNotFound(options.Repo, options.To);
 
         var ignoreLineExpressions = (options.IgnoreLines ?? new string[0]).Select(s => new Regex(s)).ToArray();
         var ignoreFileExpressions = (options.IgnoreFiles ?? new string[0]).Select(s => new Regex(s)).ToArray();
@@ -76,15 +113,7 @@ public static class RunOnce
             }
 
             var patchLines = FindCodeLines(change);
-            var added = FindInterestingLines(patchLines, "+", ignoreLineExpressions);
-            var removed = FindInterestingLines(patchLines, "-", ignoreLineExpressions);
-            if (added.IsEmpty() && removed.IsEmpty())
-            {
-                continue;
-            }
-
-            if (options.IgnoreWhitespace &&
-                AreSameWithoutWhitespace(added, removed))
+            if (CanSkipChange(options, patchLines, ignoreLineExpressions))
             {
                 continue;
             }
@@ -130,10 +159,39 @@ public static class RunOnce
         return 0;
     }
 
+    private static bool CanSkipChange(Options options, string[] patchLines, Regex[] ignoreLineExpressions)
+    {
+        var added = FindInterestingLines(patchLines, "+", ignoreLineExpressions);
+        var removed = FindInterestingLines(patchLines, "-", ignoreLineExpressions);
+        if (added.IsEmpty() && removed.IsEmpty())
+        {
+            return true;
+        }
+
+        if (options.IgnoreWhitespace &&
+            AreSameWithoutWhitespace(added, removed))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     private static int Bail(int result, string message)
     {
         Console.Error.WriteLine(message);
         Console.Error.WriteLine(" (try --help for help)");
         return result;
+    }
+}
+
+public class CommitIdentifierNotFound
+    : Exception
+{
+    public CommitIdentifierNotFound(
+        string repoPath,
+        string identifier
+    ): base ($"Unable to identify a branch, tag or commit in '{repoPath}' by '{identifier}'")
+    {
     }
 }
