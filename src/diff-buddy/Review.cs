@@ -135,6 +135,7 @@ public static class Review
             );
             var lines = io.StandardOutput.ToArray();
             var fileName = GrokFileNameFrom(lines.First());
+            SetRelativePositionOn(lines, i, end);
 
             if (LookingForLastFile())
             {
@@ -168,6 +169,17 @@ public static class Review
         {
             return seekToLastFile && !foundLastFile;
         }
+    }
+
+    private static void SetRelativePositionOn(string[] lines, int current, int end)
+    {
+        if (!lines.Any())
+        {
+            return;
+        }
+        
+        lines[0] = lines[0].RegexReplace("^\\[\\d+\\]", $"[{current} / {end}]");
+        
     }
 
     private static void HandleReviewCompleted(ReviewState reviewState)
