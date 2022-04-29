@@ -105,11 +105,13 @@ public class ReviewState
             _reviewStateItems.Any() &&
             state.Limit == _options.Limit &&
             state.Offset == _options.Offset &&
-            state.IgnoreFiles.IsEquivalentTo(_options.IgnoreFiles);
+            (state.IgnoreFiles ?? Empty).IsEquivalentTo(_options.IgnoreFiles ?? Empty);
         
         // we'll make a new one anyway - don't leave bad state lying about
         ClearCommentsFile();
     }
+    
+    private static readonly string[] Empty = Array.Empty<string>();
 
     private void ValidateRehydratedState(
         Options options,
