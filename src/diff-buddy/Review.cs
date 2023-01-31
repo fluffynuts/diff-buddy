@@ -63,7 +63,7 @@ public static class Review
         {
             return entries;
         }
-        
+
 
         Console.WriteLine($"Unable to count changes in {options.Repo}");
         Console.WriteLine($"stdout: {stdout.JoinWith("\n")}");
@@ -98,6 +98,7 @@ public static class Review
             {
                 throw new Exception($"Can't find myself at: {trimmed}");
             }
+
             // OSX says you're running a .exe, but you aren't
             trimmed = trimmed.RegexReplace(".exe$", "");
             Console.WriteLine($"Removed the .exe: {trimmed}");
@@ -106,6 +107,7 @@ public static class Review
                 throw new Exception($"Can't find myself at: {trimmed}");
             }
         }
+
         return _exe = trimmed;
     }
 
@@ -118,12 +120,18 @@ public static class Review
     )
     {
         var seekToLastFile = options.Continue &&
-            reviewState.CanContinue && 
+            reviewState.CanContinue &&
             reviewState.LastFile is not null;
         var foundLastFile = false;
+        var fileNameToIndexLookup = GenerateFileNameToIndexLookupFor(exe, options);
         if (LookingForLastFile())
         {
             Console.Write($"Seeking to last position: {reviewState.LastFile} ");
+            if (fileNameToIndexLookup.TryGetValue(reviewState.LastFile ?? "", out var shouldStartAt))
+            {
+                start = shouldStartAt;
+                Console.WriteLine($"- should start at {shouldStartAt}");
+            }
         }
 
         for (var i = start; i < end; i++)
@@ -171,15 +179,42 @@ public static class Review
         }
     }
 
+    private static Dictionary<string, int> GenerateFileNameToIndexLookupFor(string exe, Options options)
+    {
+        var result = new Dictionary<string, int>();
+        var opts = options.DeepClone();
+        opts.Review = false;
+        using var io = ProcessIO.Start(
+            exe, opts.GenerateArgs().AsQuotedArgs()
+        );
+        foreach (var line in io.StandardOutput)
+        {
+            var match = LineAndFileRegex.Match(line);
+            if (match.Groups.Count != 3)
+            {
+                continue;
+            }
+            var lineNumberString = match.Groups[1].Value.TrimStart('0');
+            if (!int.TryParse(lineNumberString, out var lineNumber))
+            {
+                continue;
+            }
+            result[match.Groups[2].Value] = lineNumber;
+        }
+
+        return result;
+    }
+    
+    private static readonly Regex LineAndFileRegex = new("^\\[(\\d+)\\]\\s+[A-Z]+\\s+(.*)$");
+
     private static void SetRelativePositionOn(string[] lines, int current, int end)
     {
         if (!lines.Any())
         {
             return;
         }
-        
+
         lines[0] = lines[0].RegexReplace("^\\[\\d+\\]", $"[{current} / {end}]");
-        
     }
 
     private static void HandleReviewCompleted(ReviewState reviewState)
@@ -308,7 +343,7 @@ and afterwards come back here to confirm removal of review state files.".BrightB
         var win = CreateWindow();
 
         var (leftFrame, rightFrame) = CreateFrames(win);
-        
+
         AddDiffView(leftFrame, lines);
 
         var commentArea = new TextView()
