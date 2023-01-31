@@ -132,6 +132,11 @@ public static class Review
                 start = shouldStartAt;
                 Console.WriteLine($"- should start at {shouldStartAt}");
             }
+            else
+            {
+                Console.WriteLine($"{reviewState.LastFile} isn't in the changeset any more. Something has changed in this repository. Starting from scratch again.");
+                seekToLastFile = false;
+            }
         }
 
         for (var i = start; i < end; i++)
