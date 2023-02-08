@@ -134,7 +134,8 @@ public static class Review
             }
             else
             {
-                Console.WriteLine($"{reviewState.LastFile} isn't in the changeset any more. Something has changed in this repository. Starting from scratch again.");
+                Console.WriteLine(
+                    $"{reviewState.LastFile} isn't in the changeset any more. Something has changed in this repository. Starting from scratch again.");
                 seekToLastFile = false;
             }
         }
@@ -199,17 +200,19 @@ public static class Review
             {
                 continue;
             }
+
             var lineNumberString = match.Groups[1].Value.TrimStart('0');
             if (!int.TryParse(lineNumberString, out var lineNumber))
             {
                 continue;
             }
+
             result[match.Groups[2].Value] = lineNumber;
         }
 
         return result;
     }
-    
+
     private static readonly Regex LineAndFileRegex = new("^\\[(\\d+)\\]\\s+[A-Z]+\\s+(.*)$");
 
     private static void SetRelativePositionOn(string[] lines, int current, int end)
@@ -286,6 +289,7 @@ and afterwards come back here to confirm removal of review state files.".BrightB
     }
 
     private static readonly Regex FileNameMatcher = new Regex("(\\S+)\\s+(\\S+)\\s+(\\S+)");
+    private static DiffTextView _diffTextView;
 
     private static Window CreateWindow()
     {
@@ -328,13 +332,14 @@ and afterwards come back here to confirm removal of review state files.".BrightB
         View parent,
         string[] lines)
     {
-        parent.Add(new DiffTextView()
+        _diffTextView = new DiffTextView()
         {
             Width = Dim.Fill(),
             Height = Dim.Fill(),
             Text = string.Join("\n", lines),
             ReadOnly = true
-        });
+        };
+        parent.Add(_diffTextView);
     }
 
     private static ReviewResults LaunchReviewUiWith(
@@ -369,6 +374,7 @@ and afterwards come back here to confirm removal of review state files.".BrightB
         var result = ReviewResults.GoNext;
 
         commentArea.SetFocus();
+        commentArea.KeyDown += OnCommentAreaKeyDown;
         Application.Run(top);
         Application.Shutdown();
 
@@ -397,6 +403,31 @@ and afterwards come back here to confirm removal of review state files.".BrightB
             reviewStateItem.Comments = commentArea.Text.ToString();
             reviewStateItem.Persist();
             Application.RequestStop();
+        }
+    }
+
+    private static int _pos = 0;
+    private static void OnCommentAreaKeyDown(
+        View.KeyEventEventArgs ev
+    )
+    {
+        switch (ev.KeyEvent.Key)
+        {
+            case Key.PageDown:
+                _pos = Math.Min(_pos + 5, _diffTextView.Lines);
+                _diffTextView.ScrollTo(
+                    _pos, isRow: true
+                );
+                break;
+            case Key.PageUp:
+                _pos = Math.Max(_pos - 5, 0);
+                _diffTextView.ScrollTo(
+                    _pos, isRow: true
+                );
+                break;
+            default:
+                ev.Handled = false;
+                return;
         }
     }
 
