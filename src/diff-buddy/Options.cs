@@ -58,6 +58,10 @@ public class Options
     [Default(true)]
     public bool ShowOperations { get; set; }
 
+    [Description("The amount to scroll up and down by when pressing PgUp or PgDn in the comments entry (overrides env var PAGE_SIZE, if set)")]
+    [Default(null)]
+    public int? PageSize { get; set; }
+
     public bool TryResolveRepository()
     {
         var fullPath = Path.GetFullPath(Repo);

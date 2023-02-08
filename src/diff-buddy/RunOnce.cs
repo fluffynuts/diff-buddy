@@ -70,7 +70,7 @@ public static class RunOnce
         {
             return Bail(2, $"{options.Repo} is not within a git repository (try --help for help)");
         }
-
+        
         if (options.At != 0)
         {
             options.Offset = options.At - 1;

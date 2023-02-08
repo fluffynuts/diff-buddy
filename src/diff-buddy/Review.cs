@@ -407,6 +407,16 @@ and afterwards come back here to confirm removal of review state files.".BrightB
     }
 
     private static int _pos = 0;
+    private static int _pageSize = DeterminePageIncrementFromEnvironment();
+
+    private static int DeterminePageIncrementFromEnvironment()
+    {
+        var envVar = Environment.GetEnvironmentVariable("PAGE_SIZE");
+        return envVar is null || !int.TryParse(envVar, out var pageSize)
+            ? 5
+            : pageSize;
+    }
+
     private static void OnCommentAreaKeyDown(
         View.KeyEventEventArgs ev
     )
@@ -414,13 +424,13 @@ and afterwards come back here to confirm removal of review state files.".BrightB
         switch (ev.KeyEvent.Key)
         {
             case Key.PageDown:
-                _pos = Math.Min(_pos + 5, _diffTextView.Lines);
+                _pos = Math.Min(_pos + _pageSize, _diffTextView.Lines);
                 _diffTextView.ScrollTo(
                     _pos, isRow: true
                 );
                 break;
             case Key.PageUp:
-                _pos = Math.Max(_pos - 5, 0);
+                _pos = Math.Max(_pos - _pageSize, 0);
                 _diffTextView.ScrollTo(
                     _pos, isRow: true
                 );
