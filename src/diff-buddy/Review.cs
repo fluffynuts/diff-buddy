@@ -332,6 +332,7 @@ and afterwards come back here to confirm removal of review state files.".BrightB
         View parent,
         string[] lines)
     {
+        _pos = 0;
         _diffTextView = new DiffTextView()
         {
             Width = Dim.Fill(),
