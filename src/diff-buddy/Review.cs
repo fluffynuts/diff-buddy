@@ -58,7 +58,7 @@ public static class Review
         Console.WriteLine("Please wait... counting relevant changes...");
         using var io = ProcessIO.Start(exe, options.GenerateArgs().AsQuotedArgs());
         var stdout = io.StandardOutput.ToArray();
-        var result = stdout.FirstOrDefault();
+        var result = stdout.FirstOrDefault(line => line.IsInteger());
         if (result is not null && int.TryParse(result, out var entries))
         {
             return entries;

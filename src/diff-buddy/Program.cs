@@ -23,6 +23,8 @@ if (options.PageSize is not null)
     Environment.SetEnvironmentVariable("PAGE_SIZE", $"{options.PageSize}");
 }
 
-return options.Review
+var result = options.Review
     ? Review.RunWith(options)
     : RunOnce.With(options, false);
+
+return result;

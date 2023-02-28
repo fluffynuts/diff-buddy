@@ -15,8 +15,8 @@
     <ItemGroup>
         <PackageReference Include="LibGit2Sharp" Version="0.26.2" />
         <PackageReference Include="Pastel" Version="3.0.0" />
-        <PackageReference Include="PeanutButter.EasyArgs" Version="2.0.66" />
-        <PackageReference Include="PeanutButter.Utils" Version="2.0.66" />
+        <PackageReference Include="PeanutButter.EasyArgs" Version="3.0.100" />
+        <PackageReference Include="PeanutButter.Utils" Version="3.0.100" />
         <PackageReference Include="Terminal.Gui" Version="1.5.0" />
         <PackageReference Include="TextCopy" Version="6.1.0" />
     </ItemGroup>

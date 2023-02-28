@@ -62,6 +62,12 @@ public class Options
     [Default(null)]
     public int? PageSize { get; set; }
 
+    [Description("When diffing starting at a sha, we can try to remove deltas brought in from merges from the parent (will default to master or main, if found)")]
+    public string ParentBranch { get; set; }
+
+    [Description("When diffing starting at a sha, we can try to ignore deltas which are purely from parent merges (experimental)")]
+    public bool IgnoreParentMerges { get; set; }
+
     public bool TryResolveRepository()
     {
         var fullPath = Path.GetFullPath(Repo);
